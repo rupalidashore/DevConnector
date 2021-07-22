@@ -1,14 +1,19 @@
+//Post API Code
+
 const express = require('express');
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcryptjs');//convert plain text to hased form
 const gravatar = require('gravatar');
-const router = express.Router();
+const jwt = require('jsonwebtoken');
+const router = express.Router(); //create a instance of express
 const User = require('../../models/User');
+const keys = require('../../config/keys');
+const { countDocuments } = require('../../models/User');
 
 router.get('/test', (req,res)=> res.json({msg:'users test route works!'}));
 
-// @route POST api/users/register
-// @desc Register a user
-//@access public
+// @route   POST api/users/register
+// @desc    Register a user
+//@access   public
 router.post('/register', (req,res)=>{
   console.log('Inside /register')
   User.findOne({email:req.body.email})
@@ -17,20 +22,20 @@ router.post('/register', (req,res)=>{
     if(user){
       return res.status(400).json({email:'Email already exists'});
     }else{
-      
+      //call external api gravatar
       const avatar = gravatar.url(req.body.email,{
-        s:'200',
-        r: 'pg',
-        d:'mm'
+        s:'200', //pic size
+        r: 'pg', //pg rating
+        d:'mm'   //default picture
       });
-      
+      // Create a new user Object
       const newUser = new User({
         name:req.body.name,
         email:req.body.email,
         password:req.body.password,
         avatar
       });
-      
+      //within a function we called another function hash 
       bcrypt.genSalt(10,(err,salt) => {
           if(err) console.log(err);
       console.log('req =' + req)
@@ -55,4 +60,45 @@ router.post('/register', (req,res)=>{
 .catch(err => console.log(err));     
     
 });
-    module.exports = router;
+// @route POST api/users/login
+// @desc   Login a user and generate a token
+//@access public
+router.post('/login',(req,res)=>{
+  console.log('Inside /login')
+  console.log('email = ' + req.body.email);          
+  console.log('Password = ' + req.body.password);    
+  User.findOne({email:req.body.email})
+    .then(user =>{
+      if (!user){console.log('Login:User not found'); return res.status(404).json({email:'User not found'});
+    }
+    console.log('TRYING TO COMPARE PASSWORDS WITH' + user.password);          
+      bcrypt.compare(req.body.password, user.password)
+      .then(isMatch => {
+        if(isMatch){
+          //payload
+          const payload = {
+            id:user.id,
+            name:user.name,
+            avatar:user.avatar
+          };
+      //Genrate/sign token
+            jwt.sign(
+              payload,
+              keys.secretOrKey,
+              {expiresIn:3600},
+              (err,token) => {        //call back
+                return res.json({token: 'Bearer' + token});
+              })
+
+        } else {
+          //return res.json({msg:'password matched for user' });
+       
+            return res.status(400).json({password: 'Incorrect password'});
+         
+      }
+    })
+    })
+    .catch(err => console.log(err))
+});
+
+ module.exports = router;
