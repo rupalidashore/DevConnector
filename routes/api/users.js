@@ -4,18 +4,26 @@ const express = require('express');
 const bcrypt = require('bcryptjs');//convert plain text to hased form
 const gravatar = require('gravatar');
 const jwt = require('jsonwebtoken');
+const passport = require('passport')
 const router = express.Router(); //create a instance of express
 const User = require('../../models/User');
 const keys = require('../../config/keys');
-const { countDocuments } = require('../../models/User');
+const validateRegisterInput = require('../../validation/registration');
 
-router.get('/test', (req,res)=> res.json({msg:'users test route works!'}));
-
-// @route   POST api/users/register
+// @route   POST api/users/register[call 1st api register]
 // @desc    Register a user
 //@access   public
+
 router.post('/register', (req,res)=>{
-  console.log('Inside /register')
+  //validation
+ const {errors,isValid} = validateRegisterInput(req.body);
+ console.log("Validate error" + errors);
+ console.log("isValid = " + isValid )
+  if (!isValid){
+    return res.status(400).json(errors);
+  }
+  
+
   User.findOne({email:req.body.email})
   //promise  statement
   .then(user =>{                      
@@ -37,18 +45,11 @@ router.post('/register', (req,res)=>{
       });
       //within a function we called another function hash 
       bcrypt.genSalt(10,(err,salt) => {
-          if(err) console.log(err);
-      console.log('req =' + req)
-      console.log('req.body = ' + req.body);
-      console.log('req.body.string = ' + req.body);
-      console.log('Name = ' + req.body.name);      
-      console.log('email = ' + req.body.email);          
-      console.log('Password = ' + req.body.password);      
-      console.log('salt = ' + salt);
+          if(err) throw err;
+     
         bcrypt.hash(req.body.password,salt,(err,hash) => {
-          if (err) console.log(err);
-          console.log('Hash = ' + hash);
-          newUser.password = hash;
+          if (err) throw err;
+         newUser.password = hash;
           newUser.save()
           .then(user => res.json(user))
           .catch(err => console.log(err))
@@ -60,22 +61,29 @@ router.post('/register', (req,res)=>{
 .catch(err => console.log(err));     
     
 });
-// @route POST api/users/login
+// @route POST api/users/login [call second api login]
 // @desc   Login a user and generate a token
 //@access public
 router.post('/login',(req,res)=>{
-  console.log('Inside /login')
-  console.log('email = ' + req.body.email);          
-  console.log('Password = ' + req.body.password);    
-  User.findOne({email:req.body.email})
-    .then(user =>{
-      if (!user){console.log('Login:User not found'); return res.status(404).json({email:'User not found'});
+  //validation
+
+  const {errors, isValid} = validateLoginInput(req.body);
+
+  if(!isValid){
+    return res.status(400).json(errors);
+  }
+
+   
+  User.findOne({email: req.body.email})
+    .then(user => {
+      if (!user) {
+      return res.status(404).json({email:'User not found'});
     }
-    console.log('TRYING TO COMPARE PASSWORDS WITH' + user.password);          
+    
       bcrypt.compare(req.body.password, user.password)
       .then(isMatch => {
         if(isMatch){
-          //payload
+          //Payload
           const payload = {
             id:user.id,
             name:user.name,
@@ -91,14 +99,25 @@ router.post('/login',(req,res)=>{
               })
 
         } else {
-          //return res.json({msg:'password matched for user' });
+         
        
             return res.status(400).json({password: 'Incorrect password'});
          
-      }
-    })
-    })
+         }
+       })
+      })
     .catch(err => console.log(err))
 });
+// @route POST api/users/current [call 3rd api current]
+// @desc   Return current user information
+//@access private
+
+  router.get(
+    '/current',
+    passport.authenticate('jwt',{session:false}),//private api not public 
+    (req,res) => {
+        res.json(req.user);
+    });
+
 
  module.exports = router;
