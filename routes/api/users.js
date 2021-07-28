@@ -1,7 +1,7 @@
 //Post API Code
 
 const express = require('express');
-const bcrypt = require('bcryptjs');//convert plain text to hased form
+const bcrypt = require('bcryptjs');  //convert plain text to hased form
 const gravatar = require('gravatar');
 const jwt = require('jsonwebtoken');
 const passport = require('passport')
@@ -9,6 +9,8 @@ const router = express.Router(); //create a instance of express
 const User = require('../../models/User');
 const keys = require('../../config/keys');
 const validateRegisterInput = require('../../validation/registration');
+const validateLoginInput = require('../../validation/login');
+
 
 // @route   POST api/users/register[call 1st api register]
 // @desc    Register a user
@@ -95,7 +97,7 @@ router.post('/login',(req,res)=>{
               keys.secretOrKey,
               {expiresIn:3600},
               (err,token) => {        //call back
-                return res.json({token: 'Bearer' + token});
+                return res.json({token: 'Bearer ' + token});
               })
 
         } else {
@@ -114,7 +116,7 @@ router.post('/login',(req,res)=>{
 
   router.get(
     '/current',
-    passport.authenticate('jwt',{session:false}),//private api not public 
+    passport.authenticate('jwt',{session:false}),  //private api not public 
     (req,res) => {
         res.json(req.user);
     });

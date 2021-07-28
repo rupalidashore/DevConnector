@@ -1,8 +1,8 @@
 
-           //Define User Model(registration page )
+           //Define User Model(registration/login page )
 
-           const mongoose = require('mongoose');
-const Schema = mongoose.Schema;//Schema is the representation of data (blue print of data)
+            const mongoose = require('mongoose');
+            const Schema = mongoose.Schema;//Schema is the representation of data (blue print of data)
 const UserSchema = new Schema({
   
   name: {
