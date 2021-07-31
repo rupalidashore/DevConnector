@@ -71,8 +71,8 @@ from:{
   },
 
   description: {
-    type:String
-  }
+        type:String
+      }
 
 }],
 

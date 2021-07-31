@@ -10,7 +10,7 @@ const posts = require('./routes/api/posts');
 const app = express();
 
 //Body parser config
-app.use(express.urlencoded());
+app.use(express.urlencoded({ extended: true }));// if a user has special characters in the name. express will convert them to json.
 app.use(express.json()); //express convert all data in json format
 
 //Db config
@@ -23,10 +23,10 @@ mongoose
 
 
 //passport config
-app.use(passport.initialize());
+app.use(passport.initialize());// asking express to use passport to authenticate the token; it will look for token in the request
 require('./config/passport')(passport);
 
-//Let's write our first route:route is the request coming from the client; url will dictate the request
+//Create the  first route:route is the request coming from the client; url will dictate the request
 // get and post are two most common routes;
 
 app.get('/', (req,res) =>res.send('Hello World'));  //arrow statement (express route)
