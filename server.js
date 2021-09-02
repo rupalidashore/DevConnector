@@ -29,7 +29,7 @@ require('./config/passport')(passport);
 //Create the  first route:route is the request coming from the client; url will dictate the request
 // get and post are two most common routes;
 
-app.get('/', (req,res) =>res.send('Hello World'));  //arrow statement (express route)
+
 
 
 //use routes(path of url)
@@ -37,5 +37,12 @@ app.use('/api/users',users);
 app.use('/api/profile',profile);
 app.use('/api/posts',posts);
 
-const port = 5000; //port number
+if (process.env.NODE_ENV ==='production'){
+  app.use(express.static('client/build'));
+  app.get('*',(req,res) =>{
+    res.sendFile(path.resolve(_dirname,'client','build','index.html'))
+  })
+}
+
+const port = process.env.PORT || 5000; //port number
 app.listen(port,() => console.log(`server is running on port ${port}`));
