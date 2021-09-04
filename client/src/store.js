@@ -8,7 +8,7 @@ const store = createStore(
   rootReducer,{},
   compose(
   applyMiddleware(...middleware),
-  window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__() //debugging purpose 
+ // window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__() //debugging purpose 
  )
   );
   
